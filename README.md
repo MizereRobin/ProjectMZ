@@ -1,5 +1,5 @@
 # ProjectMZ 
-Project for Robotics Class)
+Project for Robotics Class
 
 # Goals
 Make a _"keyless go"_ feature for a motorbike with gear display with arduino uno boars
