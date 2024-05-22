@@ -20,8 +20,11 @@ Features:
 - 12V DC relay
 # Pictures of the project
 Tinkercad:
+
 ![project](https://github.com/MizereRobin/ProjectMZ/assets/145005391/4d7699a8-7a85-45d5-aeac-54b43f795b5f)
 
 Wiring:
+
+
 ![abra](https://github.com/MizereRobin/ProjectMZ/assets/145005391/eaf00e64-cfad-4169-b709-575211537e12)
 
