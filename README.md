@@ -1,7 +1,7 @@
 # ProjectMZ 
 Project for Robotics Class
 Authors:
-  -
+  - 廖国远（Karl Alexander）
   - Mizere Robin Roland
 
 # Goals
