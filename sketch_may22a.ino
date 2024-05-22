@@ -1,18 +1,17 @@
 #include "EasyMFRC522.h"
 
-EasyMFRC522 rfidReader(4, 3); // The MFRC522 reader, with the SDA and RST pins given
-
-// Variable created to store the unique identifier of the RFID card
-uint8_t cardUID[10]; // The array of identifiers (10 bytes)
+EasyMFRC522 rfidReader(4, 3); // MFRC522 读卡器，给出了 SDA 和 RST 引脚
+// 创建变量用于存储 RFID 卡的唯一标识符
+uint8_t cardUID[10]; // 标识符数组identifier9（10 字节）
 
 String UID = "";
-String goodID = "e3b42cd000000";
+String goodID = "da32dd84000000";
 int gear = 0;
 int before = 0;
 bool locked = true;
 
 
-// Define PIN names with PIN numbers
+// 使用 PIN 码定义 PIN 名称
 #define topleft 2
 #define top 7
 #define topright 6
@@ -30,12 +29,13 @@ bool locked = true;
 
 void setup() {
   Serial.begin(9600);
-  Serial.setTimeout(20000); // Waits for up to 20 seconds for "read" functions
+  Serial.setTimeout(20000); // “读取”功能最多等待 20 秒
+
   
   while (!Serial)
     ;
 
-  // The initialization function call is necessary!
+  // 初始化函数的调用是必要的！
   rfidReader.init(); 
 
   pinMode(2, OUTPUT);
@@ -139,7 +139,7 @@ void Write(int character) {
       digitalWrite(dot, LOW);
     break;
 
-    case 6:            /// only "."
+    case 6:            /// 只有 "."
       digitalWrite(topleft, LOW);
       digitalWrite(top, LOW);
       digitalWrite(topright, LOW);
@@ -160,7 +160,7 @@ void Write(int character) {
       digitalWrite(dot, LOW);
     break;
 
-    default:        ///   only "-"
+    default:        ///   只有 "-"
       digitalWrite(topleft, LOW);
       digitalWrite(top, LOW);
       digitalWrite(topright, LOW);
@@ -177,17 +177,24 @@ void Write(int character) {
 void shifter() {
   before=gear;
   delay(750);
-  //Serial.println(gear);
+  //Serial.println(齿轮);
   if(digitalRead(downshift) == HIGH && gear == 0){
     gear = 1;
   }
   else if (digitalRead(upshift) == HIGH && gear == 0){
     gear = 2;
   }
+  else if(digitalRead(downshift) == HIGH && gear == 2){
+    gear = 0;
+  }
+  else if (digitalRead(upshift) == HIGH && gear == 1){
+    gear = 0;
+  }
   else if(digitalRead(downshift) == HIGH && gear > 2){gear--;}
   else if(digitalRead(upshift) == HIGH && gear < 5){gear++;}
-  //else {gear = 6;}
+  //else {gear = 6;}就是0档
   Write(gear);
+  Serial.println(gear);
 }
 
 void RFID_Check() {
@@ -195,59 +202,67 @@ void RFID_Check() {
   Serial.println("Identify the Mifare card. Please wait...");
 
   bool success;
+  float timer = 0;
   do {
-    // True if a Mifare card is detected
+    // 如果检测到 Mifare 卡则为 True
     success = rfidReader.detectTag();
-    delay(50); // Wait for 0.05 seconds
+    delay(50); // 等0.05秒
+    timer+=0.5;
+    if(!locked && timer>=10){break;}
   } while (!success);
-
+if(success){
   Serial.println("--> CARD DETECTED!\n");
   int result;
 
   {
-    // Reading and storing the unique identifier
+    // 读取并存储唯一标识符identifier
     MFRC522* device = rfidReader.getMFRC522();
-    memcpy(cardUID, device->uid.uidByte, 10); // Copy the identifier to the cardUID array
-    // Print the read identifier to the serial monitor
+    memcpy(cardUID, device->uid.uidByte, 10); // 将标识符复制到cardUID数组
+    // 将读取标识符打印到串行监视器
     Serial.println("Read identifier:");
     for (byte i = 0; i < 10; i++) {
       Serial.print(cardUID[i], HEX);
       UID+=String(cardUID[i], HEX);
       Serial.print(" ");
     }
-    Serial.println(); // New line
+    Serial.println(); // 新的一行
     Serial.println();
 
     if (UID == goodID){
+      UID="";
       Serial.println("OK");
       Serial.println(locked);
-      locked = !locked;
+      UID="";
+      if(locked) {Unlock();}
+      else{Lock();}
+      UID="";
     }
-    else{
+    else if(UID != ""){
       Serial.println("NOT OK");
       Lock();
       }
     UID="";
     delay(500);
   }
-
-  while (Serial.available() > 0) {  // Clear "garbage" input from serial
+  UID="";
+  while (Serial.available() > 0) {  // 清除串行输入的“垃圾”
     Serial.read();
   }
 
-  // Call this function after performing all desired operations on the tag
+  // 对标签执行所有所需操作后调用此函数
   rfidReader.unselectMifareTag();
   
   Serial.println();
   Serial.println("Operation finished!");
   Serial.println();
+  UID="";
   delay(3000);
+}
 }
 
 void Lock(){
-  digitalWrite(relayPIN, LOW);
   locked=true;
-  //Buzzer low double beep
+  //响两下buzzer就是low
   tone(BuzzerPIN, 200);
   delay(250);
   noTone(BuzzerPIN);
@@ -263,9 +278,8 @@ void Locked(){
 }
 
 void Unlock(){
-  digitalWrite(relayPIN, HIGH);
   locked=false;
-  //buzzer one higher beep
+  //响high一声buzzer就是high
   tone(BuzzerPIN, 1000);
   delay(250);
   noTone(BuzzerPIN);
@@ -274,11 +288,13 @@ void Unlock(){
 void Unlocked(){
   shifter();
   RFID_Check();
+  
 }
 
 
 void loop(){
   if(locked){
+    digitalWrite(relayPIN, LOW);
     Write(6);
     Locked();
     delay(250);
@@ -286,7 +302,7 @@ void loop(){
     delay(500);
   }
   else {
+  digitalWrite(relayPIN, HIGH);
   Unlocked();
   }
-
 }
