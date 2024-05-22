@@ -18,3 +18,5 @@ Features:
 - LED 1x
 - Photoresistor (LPD) 1x
 - 12V DC relay
+# Picture of the project in TinkerCAD
+![project](https://github.com/MizereRobin/ProjectMZ/assets/145005391/4d7699a8-7a85-45d5-aeac-54b43f795b5f)
